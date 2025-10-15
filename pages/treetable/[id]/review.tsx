@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { saveReview, fetchReview } from "@/services/treetableService";
 import { logUsageEvent } from "@/utils/logUsageEvent";
+import { useMemo } from "react";
 
 interface ReviewItem {
   label: string;
@@ -9,16 +10,16 @@ interface ReviewItem {
 }
 
 const CHECK_ITEMS = [
-  "주요 부품에 재질(Material)과 표면처리(Surface Treatment)가 정확히 지정되어 있는가?",
-  "표준품(나사, 체결구, O-ring, 인서트 등)을 사용하여 설계했는가?",
-  "파트 번호, 명칭, 리비전이 3D CAD 모델, EBOM, 2D 도면 간에 일치하는가?",
-  "CAD 어셈블리와 Drawing이 최신으로 업데이트되었으며, 표제란에 누락이나 중복이 없는가?",
-  "수량(Quantity)은 필요수량에 맞게 입력하였는가?",
-  "BOM 항목에 입력된 재질 및 표면처리 정보가 재질 표준 및 규제(예: ROHS/REACH)에 부합하는가?",
-  "모든 아이템의 리비전 이력이 업데이트되어 있으며, 진행 중(WIP) 상태가 아닌 확정 상태인가?",
-  "도면 및 3D 모델에서 정의된 치수가 입력되었고, 3D 데이터 기준 간섭체크를 수행했는가?",
-  "메타데이터(부품번호, 이름, 주요속성)가 정확히 입력되어 있는가?",
-  "EBOM이 요구사항(시험 장치, 안전 커버, 환경 조건 등)을 충족하며, 누락된 부품은 없는가?",
+  "제품 설계 시 탄소배출량이 목표치(기준값) 이내로 유지되도록 설계했는가?",
+  "부품 재질(Material)은 저탄소·재활용 가능 소재로 선정되었는가?",
+  "표면처리(Surface Treatment)는 유해물질을 사용하지 않고, 환경규제(ROHS/REACH 등)에 부합하는가?",
+  "표준품(나사, 체결구, O-ring 등)을 사용하여 불필요한 가공·자원 낭비를 최소화했는가?",
+  "형상 변경 또는 재질 변경 시, 리비전 및 데이터(3D·2D·EBOM)가 일관되게 업데이트되었는가?",
+  "조립·생산 단계에서 불필요한 공정, 과잉 부품 사용 등 탄소 배출을 유발하는 설계 요소가 없는가?",
+  "설계 초기 단계에서 대체 가능한 저탄소 구조나 경량화 설계안을 충분히 검토하였는가?",
+  "설계 개념 단계에서 제품의 예상 에너지 소비 및 탄소 배출량 목표치를 설정하였는가?",
+  "설계 단계에서 산출된 BOM과 3D 데이터가 LCA 수행에 필요한 입력 정보를 충분히 포함하고 있는가?",
+  "제품 구조는 재활용성, 분해 용이성, 수명주기 말기 처리(Lifecycle End)까지 고려하여 설계되었는가?",
 ];
 
 export default function ReviewPage() {
@@ -52,7 +53,7 @@ export default function ReviewPage() {
   }, [id]);
 
   //모든 체크리스트가 체크되었는지 확인하는 코드
-  //const allChecked = useMemo(() => checked.every(Boolean), [checked]);
+  const allChecked = useMemo(() => checked.every(Boolean), [checked]);
 
   const toggle = (i: number) =>
     setChecked(prev => {
@@ -61,30 +62,15 @@ export default function ReviewPage() {
       return next;
     });
 
-  // const goToBOMTable = async () => {
-  //   await logUsageEvent("EBOM", "Display EBOM Table", { note: "Go to LCA from review page" });
-  //   router.push(`/treetable/${id}`);
-  // };
-
-  // const handleExportBom = async () => {
-  //   try {
-  //     await logUsageEvent("LCA REPORT", "Display LCA report", { note: "Go to LCA from review page" });
-  //     // 리포트 페이지로 이동
-  //     router.push(`/lca/${id}`);
-  //   } catch (e: unknown) {
-  //     // 실패도 로그 남김
-  //     alert("LCA REPORT 표시 중 오류: " + (e instanceof Error ? e.message : "unknown"));
-  //   }
-  // };
-
-  // const handleEnd = async () => {
-  //   //모든 체크리스트가 다 체크 되었다면 프로세스를 종료하고 결과페이지를 Open한다.
-  //   alert("모든 체크리스트가 다 체크 되었나요? 확인 버튼을 클릭하면 제품개발 프로세스를 종료합니다.");
-  // };
-
   const handleNextProcess = async () => {
-    await logUsageEvent("STAGE Change", "Going to Testing/Prototype Stage", { note: "Testing/Prototype Stage" });
-    router.push(`/treetable/${id}/Testing_Prototype_Stage`);
+    if (allChecked == true) {
+      await logUsageEvent("STAGE Change", "Going to Testing/Prototype Stage", { note: "Testing/Prototype Stage" });
+      router.push(`/treetable/${id}/Testing_Prototype_Stage`);
+    }else{
+      alert("모든 체크리스트가 검토되지 않았습니다");
+    }
+
+
   };
 
   const handleSave = async () => {
@@ -111,10 +97,7 @@ export default function ReviewPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <h1 style={{ margin: 0 }}>설계 검토 체크리스트</h1>
         <div style={{ display: "flex", gap: 8 }}>
-          {/* <button className="btn" onClick={goToBOMTable}>목록으로</button> */}
           <button className="btn" onClick={handleSave}>저장하기</button>
-          {/* <button className="btn" onClick={handleExportBom}>LCA 분석</button> */}
-          {/* <button className="btn" onClick={handleEnd}>프로세스 종료</button> */}
           <span style={{ margin: "0 8px" }}>|</span>  {/* 구분자 */}
           <button className="btn" onClick={handleBack} >이전단계</button>
           <button className="btn" onClick={handleNextProcess}>다음 단계</button>
