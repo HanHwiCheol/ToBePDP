@@ -22,6 +22,31 @@ export function TreeGrid({
   onChangeCell: (idx: number, key: keyof NodeRow, value: string | number | null) => void;
   materials: Material[];
 }) {
+
+  // 재질명으로 EF(kgCO2e/kg) 찾기
+  const getEf = (materialName?: string | null) => {
+    if (!materialName) return 0;
+    const m = materials.find(
+      (x) =>
+        (x.label).toLowerCase() ===
+        materialName.toLowerCase()
+    );
+    console.log("found material:", m);
+    // 프로젝트마다 필드명이 다를 수 있어 흔한 이름들을 순서대로 시도
+    return Number(
+      (m as any)?.emission_factor ??
+      0
+    );
+  };
+
+  // 라인별 탄소(kgCO₂e) = total_mass_kg × EF
+  const carbonByIndex = rows.map((r) => {
+    const mass = Number(r.total_mass_kg ?? 0);
+    const ef = getEf(r.material ?? "");
+    return mass * ef;
+  });
+  const maxCarbon = carbonByIndex.length ? Math.max(...carbonByIndex) : 0;
+
   return (
     <div style={wrap}>
       <table style={table}>
@@ -30,13 +55,14 @@ export function TreeGrid({
           <col style={{ width: 100 }} /> {/* 라인번호 */}
           <col style={{ width: 140 }} /> {/* 품번 */}
           <col style={{ width: 80 }} />  {/* 리비전 */}
-          <col style={{ width: 200 }} /> {/* 이름 */}
+          <col style={{ width: 150 }} /> {/* 이름 */}
           <col style={{ width: 140 }} /> {/* 생성일 */}
           <col style={{ width: 140 }} /> {/* 수정일 */}
           <col style={{ width: 100 }} /> {/* 재질 */}
           <col style={{ width: 40 }} /> {/* 수량 */}
           <col style={{ width: 40 }} />  {/* 단위 */}
-          <col style={{ width: 100 }} /> {/* 총질량(kg) */}
+          <col style={{ width: 80 }} /> {/* 질량(kg) */}
+          <col style={{ width: 80 }} /> {/* 탄소(kgCO₂e) */}
         </colgroup>
         <thead style={thead}>
           <tr>
@@ -49,19 +75,28 @@ export function TreeGrid({
             <th>재질</th>
             <th>수량</th>
             <th>단위</th>
-            <th>총질량(kg)</th>
+            <th>질량(kg)</th>
+            <th>탄소(kgCO₂e)</th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={11} style={emptyCell}>
+              <td colSpan={12} style={emptyCell}>
                 데이터가 없습니다. 엑셀을 Import 하세요.
               </td>
             </tr>
           ) : (
             rows.map((r, idx) => (
-              <tr key={r._tmpId ?? r.id ?? idx} style={rowStyle}>
+              <tr
+                key={r._tmpId ?? r.id ?? idx}
+                style={{
+                  ...rowStyle,
+                  ...(carbonByIndex[idx] === maxCarbon && maxCarbon > 0
+                    ? { background: "#f17a7aff" } // 연한 주황 경고 배경
+                    : {}),
+                }}
+              >
                 {/* 라인번호 */}
                 <td>
                   <input
@@ -142,10 +177,21 @@ export function TreeGrid({
                     <option value="lb">lb</option>
                   </select>
                 </td>
-                {/* 총질량(kg) - 읽기전용 */}
+                {/* 질량(kg) - 읽기전용 */}
                 <td>
                   <div style={cellReadonly}>
                     {r.total_mass_kg != null ? Number(r.total_mass_kg).toFixed(6) : ""}
+                  </div>
+                </td>
+                {/* 탄소(kgCO₂e) - 읽기전용: total_mass_kg × EF */}
+                <td>
+                  <div style={cellReadonly}>
+                    {(() => {
+                      const mass = Number(r.total_mass_kg ?? 0);
+                      const ef = getEf(r.material ?? "");
+                      const carbon = mass * ef;
+                      return carbon > 0 ? carbon.toFixed(6) : "";
+                    })()}
                   </div>
                 </td>
               </tr>
@@ -176,6 +222,7 @@ const table: CSSProperties = {
   overflow: "hidden",
   fontSize: 12,
   lineHeight: 1.4,
+  padding: "0 12px", // ← 좌우 여백 추가 (12~16px 정도가 적당)
 };
 
 const thead: CSSProperties = {
@@ -218,6 +265,7 @@ const cellReadonly: CSSProperties = {
   ...cellBase,
   background: "#f9fafb",
   color: "#111827",
+  boxSizing: "border-box",
   whiteSpace: "nowrap",          // ✅ 날짜 줄바꿈 방지
 } as CSSProperties;
 

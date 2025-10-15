@@ -14,6 +14,7 @@ type Row = {
     carbon_kgco2e: number;
 };
 
+
 interface Props {
     treetableId: string;
     className?: string;
@@ -26,6 +27,9 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
 
     // 🔹 올해 목표치
     const [target, setTarget] = useState<number | null>(null);
+
+    //그래프 색상
+    const COLORS = ['#6366F1', '#22C55E', '#EF4444', '#F59E0B', '#06B6D4', '#A855F7', '#84CC16', '#F97316'];
 
     // 재질별 집계 불러오기
     useEffect(() => {
@@ -70,19 +74,23 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
             name: r.material_label ?? r.material ?? 'Unknown',
             value: Number(r.carbon_kgco2e ?? 0),
             pct: total > 0 ? (Number(r.carbon_kgco2e ?? 0) / total) * 100 : 0,
-        }));
+        }))            // "No Material" 제외 (대소문자 구분 없이)
+            .filter(d => d.name.toLowerCase() !== 'no material');
     }, [rows]);
 
     const barData = useMemo(() => {
-        return rows.map((r) => ({
-            name: r.material_label ?? r.material ?? 'Unknown',
-            mass: Number(r.mass_kg ?? 0),
-            carbon: Number(r.carbon_kgco2e ?? 0),
-        }));
+        return rows
+            // 표시 이름 만들기
+            .map((r) => ({
+                name: r.material_label ?? r.material ?? 'Unknown',
+                mass: Number(r.mass_kg ?? 0),
+                carbon: Number(r.carbon_kgco2e ?? 0),
+            }))
+            // "No Material" 제외 (대소문자 구분 없이)
+            .filter(d => d.name.toLowerCase() !== 'no material');
     }, [rows]);
 
-    const totalCarbon = useMemo(
-        () => rows.reduce((sum, r) => sum + Number(r.carbon_kgco2e ?? 0), 0),
+    const totalCarbon = useMemo(() => rows.reduce((sum, r) => sum + Number(r.carbon_kgco2e ?? 0), 0),
         [rows]
     );
 
@@ -123,7 +131,9 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
                                     outerRadius="80%"
                                     label={(d: import('recharts').PieLabelRenderProps) => Number(d.value ?? 0).toFixed(6)}
                                 >
-                                    {pieData.map((_, idx) => <Cell key={idx} />)}
+                                    {pieData.map((_, idx) => (
+                                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                                    ))}
                                 </Pie>
                                 <RTooltip formatter={(v: number) => Number(v).toFixed(6)} />
                             </PieChart>
@@ -142,8 +152,16 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
                                 <YAxis />
                                 <RTooltip />
                                 <Legend />
-                                <Bar dataKey="mass" name="중량(kg)" />
-                                <Bar dataKey="carbon" name="탄소(kgCO₂e)" />
+                                <Bar dataKey="mass" name="중량(kg)">
+                                    {barData.map((d, i) => (
+                                        <Cell key={`mass-${i}`} fill={COLORS[i % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                                <Bar dataKey="carbon" name="탄소(kgCO₂e)">
+                                    {barData.map((d, i) => (
+                                        <Cell key={`mass-${i}`} fill={COLORS[i % COLORS.length]} />
+                                    ))}
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -162,10 +180,10 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
                             textAlign: 'center',
                         }}
                     >
-                        <h3 className="font-semibold text-gray-700 mb-1">🌿 LCA 목표 달성률</h3>
+                        <h3 className="font-semibold text-gray-700 mb-1">LCA 목표 달성률</h3>
                         <p
                             className="text-3xl font-bold"
-                            style={{ color: totalCarbon <= target ? '#16a34a' : '#dc2626' }}
+                            style={{ fontSize: '3rem', color: totalCarbon <= target ? '#16a34a' : '#dc2626' }}
                         >
                             {target > 0 ? ((totalCarbon / target) * 100).toFixed(1) : '0.0'}%
                         </p>

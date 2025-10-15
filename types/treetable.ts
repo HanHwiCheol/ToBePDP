@@ -15,6 +15,7 @@ export type NodeRow = {
   qty_uom?: string | null;             // 'ea' | 'kg' | 'g' | 'lb' ...
   mass_per_ea_kg?: number | null;      // ea일 때 개당 질량(kg)
   total_mass_kg?: number | null;       // 서버 계산 결과(표시/리포트용)
+  carbon_kgco2e?: number | null;
   /** 레거시 호환(있으면 불러와서 화면에만 보여줄 수 있음) */
   weight?: number | null;
   created_at?: string | null;
