@@ -121,7 +121,7 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
                                     cx="50%"
                                     cy="50%"
                                     outerRadius="80%"
-                                    label={(d: any) => Number(d.value ?? 0).toFixed(6)}
+                                    label={(d: import('recharts').PieLabelRenderProps) => Number(d.value ?? 0).toFixed(6)}
                                 >
                                     {pieData.map((_, idx) => <Cell key={idx} />)}
                                 </Pie>

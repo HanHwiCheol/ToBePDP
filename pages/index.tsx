@@ -9,6 +9,7 @@ import TableSelector from "../components/TableSelector";
 import { logUsageEvent } from "@/utils/logUsageEvent";
 
 import {
+  
   btnGhost,
   card,
   centerWrap,
@@ -144,11 +145,11 @@ export default function Home() {
       router.push(`/treetable/${data.id}`);
       // 3️⃣ 다음 페이지 이동
       router.push(`/treetable/${data.id}`);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof Error) {
         alert("생성 중 오류: " + (e?.message ?? "unknown"));
       } else {
-        alert("생성 중 알 수 없는 오류 발생" + e.message);
+        alert("생성 중 알 수 없는 오류 발생" );
       }
     }
   };
