@@ -10,6 +10,7 @@ import { rowsFromXlsx } from "@/utils/xlsx";
 import { NodeRow } from "@/types/treetable";
 import { supabase } from "@/lib/supabaseClient";
 import { logUsageEvent } from "@/utils/logUsageEvent";  
+import LCAInlinePanel from "@/components/treetable/LCAInlinePanel";
 
 export default function TreetableDetail() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function TreetableDetail() {
     <div style={{ maxWidth: 1200, margin: "40px auto", padding: 16 }}>
       <h1 style={{ marginBottom: 12 }}>BOM Table</h1>
 
+      {/* 상단 툴바 */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
         {/* 왼쪽: Toolbar (Excel Import + 목록으로 + 저장하기) */}
         <Toolbar
@@ -73,6 +75,21 @@ export default function TreetableDetail() {
         />
       </div>
 
+
+      {/* ✅ 여기: LCA 요약 패널 삽입 (툴바와 테이블 사이) */}
+      <div
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 12,
+          background: "#fff",
+        }}
+      >
+        <LCAInlinePanel treetableId={treetable_id as string} />
+      </div>
+
+      {/* 하단 테이블 */}
       <TreeGrid
         rows={rows as NodeRow[]}
         onChangeCell={onChangeCell}

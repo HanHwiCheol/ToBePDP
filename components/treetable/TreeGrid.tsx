@@ -33,7 +33,7 @@ export function TreeGrid({
           <col style={{ width: 200 }} /> {/* 이름 */}
           <col style={{ width: 140 }} /> {/* 생성일 */}
           <col style={{ width: 140 }} /> {/* 수정일 */}
-          <col style={{ width: 180 }} /> {/* 재질 */}
+          <col style={{ width: 100 }} /> {/* 재질 */}
           <col style={{ width: 40 }} /> {/* 수량 */}
           <col style={{ width: 40 }} />  {/* 단위 */}
           <col style={{ width: 100 }} /> {/* 총질량(kg) */}

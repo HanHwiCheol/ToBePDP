@@ -2,6 +2,7 @@ import { CSSProperties, useCallback } from "react";
 import { useRouter } from "next/router";
 import { NodeRow } from "@/types/treetable";
 import { supabase } from "@/lib/supabaseClient";
+import { logUsageEvent } from "@/utils/logUsageEvent";
 import React from "react";
 
 interface ToolbarProps {
@@ -129,6 +130,12 @@ export function Toolbar({
     alert("CATIA 작업 시작을 기록했습니다.");
   }, [treetable_id]);  // Dependencies 명시
 
+  // LCA 타겟 작업 시작 핸들러 (useCallback 적용)
+  const handleLCATargetClick = async () => {
+    await logUsageEvent("LCA TARGET", "Setting a LCA Target (Carbon Emission target)", { note: "Setting Carbon Emission target" });
+    router.push(`/lca/LcaTargetsPage?treetable_id=${treetable_id}`);
+  };
+
   // 파일 선택 핸들러 (useCallback 적용)
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -159,11 +166,12 @@ export function Toolbar({
 
       {/* 오른쪽: 목록으로 | 저장하기(흰색) | 다음단계(흰색, 조건부 활성화) */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
+        <button style={btnLCA} className="btn" onClick={handleLCATargetClick}>LCA 목표</button>
         <button style={btnCatia} className="btn" onClick={handleCatiaStartClick}>CATIA 작업</button>
         <button onClick={handleSaveClick} disabled={saving} style={{ ...btnGhost, opacity: saving ? 0.6 : 1 }}>{saving ? "저장 중..." : "저장하기"}</button>
         <span style={{ margin: "0 8px" }}>|</span>  {/* 구분자 */}
         <button onClick={onBack} style={btnGhost}>이전단계</button>
-        <button onClick={handleNextStepClick} disabled={!rows.length || !allMaterialsChosen}  style={{...btnGhost, opacity: rows.length && allMaterialsChosen ? 1 : 0.5,cursor: rows.length && allMaterialsChosen ? "pointer" : "not-allowed",}}>다음단계</button>
+        <button onClick={handleNextStepClick} disabled={!rows.length || !allMaterialsChosen} style={{ ...btnGhost, opacity: rows.length && allMaterialsChosen ? 1 : 0.5, cursor: rows.length && allMaterialsChosen ? "pointer" : "not-allowed", }}>다음단계</button>
       </div>
     </div>
   );
@@ -204,8 +212,18 @@ const btnCatia: CSSProperties = {
   padding: "10px 16px",
   borderRadius: 12,
   border: "1px solid #e5e7eb",
-  background: "#0052f7ff",        // ← 흰색 배경
+  background: "#0052f7ff", 
   color: "#ffffffff",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const btnLCA: CSSProperties = {
+  padding: "10px 16px",
+  borderRadius: 12,
+  border: "1px solid #e5e7eb",
+  background: "#07f007c7", 
+  color: "#000000ff",
   fontWeight: 600,
   cursor: "pointer",
 };
