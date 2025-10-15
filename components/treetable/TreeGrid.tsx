@@ -24,17 +24,19 @@ export function TreeGrid({
 }) {
 
   // 재질명으로 EF(kgCO2e/kg) 찾기
-  const getEf = (materialName?: string | null) => {
+  const getEf = (materialName?: string | null): number => {
     if (!materialName) return 0;
-    const m = materials.find(
-      (x) =>
-        (x.label).toLowerCase() ===
-        materialName.toLowerCase()
+
+    const m = materials.find((x) =>
+      (x.label ?? "")
+        .toLowerCase()
+        .includes(materialName.toLowerCase())
     );
-    console.log("found material:", m);
-    // 프로젝트마다 필드명이 다를 수 있어 흔한 이름들을 순서대로 시도
-    return Number(
-      (m as any)?.emission_factor ??
+
+    if (!m) return 0;
+
+    return (
+      m.emission_factor ??
       0
     );
   };
