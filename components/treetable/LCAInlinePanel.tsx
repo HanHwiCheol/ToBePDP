@@ -24,12 +24,23 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
     const [rows, setRows] = useState<Row[]>([]);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState<string | null>(null);
-
+    const [refreshTick, setRefreshTick] = useState(0);
     // 🔹 올해 목표치
     const [target, setTarget] = useState<number | null>(null);
 
     //그래프 색상
-    const COLORS = ['#6366F1', '#22C55E', '#EF4444', '#F59E0B', '#06B6D4', '#A855F7', '#84CC16', '#F97316'];
+    const COLORS = ['#6366F1', '#22C55E', '#F59E0B', '#06B6D4', '#A855F7', '#84CC16', '#F97316'];
+
+    useEffect(() => {
+        const onSaved = (e: Event) => {
+            const { treetable_id: tid } = (e as CustomEvent).detail || {};
+            if (!treetableId || tid === treetableId) {
+                setRefreshTick(v => v + 1);   // ✅ 재조회 트리거
+            }
+        };
+        window.addEventListener("ebom:saved", onSaved);
+        return () => window.removeEventListener("ebom:saved", onSaved);
+    }, [treetableId]);
 
     // 재질별 집계 불러오기
     useEffect(() => {
@@ -48,7 +59,7 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
             setLoading(false);
         })();
         return () => { mounted = false; };
-    }, [treetableId]);
+    }, [treetableId,  refreshTick]);
 
     // 올해 목표치 불러오기
     useEffect(() => {
@@ -66,7 +77,7 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
             if (!error) setTarget(data?.target_kg_co2e ?? null);
         })();
         return () => { mounted = false; };
-    }, [treetableId]);
+    }, [treetableId,  refreshTick]);
 
     const pieData = useMemo(() => {
         const total = rows.reduce((s, r) => s + (r.carbon_kgco2e ?? 0), 0);
@@ -135,6 +146,7 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
                                         <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                                     ))}
                                 </Pie>
+                                <Legend />
                                 <RTooltip formatter={(v: number) => Number(v).toFixed(6)} />
                             </PieChart>
                         </ResponsiveContainer>
@@ -151,7 +163,6 @@ export default function LCAInlinePanel({ treetableId, className }: Props) {
                                 <XAxis dataKey="name" />
                                 <YAxis />
                                 <RTooltip />
-                                <Legend />
                                 <Bar dataKey="mass" name="중량(kg)">
                                     {barData.map((d, i) => (
                                         <Cell key={`mass-${i}`} fill={COLORS[i % COLORS.length]} />

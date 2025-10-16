@@ -63,7 +63,7 @@ export async function saveReview(treetableId: string, checklist: any) {
         reviewer_id: reviewerId,       // RLS 정책 통과용
         checklist,
         updated_at: new Date().toISOString(),
-      }
+      },  { onConflict: "treetable_id,reviewer_id" } // ✅ 인덱스와 1:1 매칭
     );
 
   if (error) throw new Error(error.message);

@@ -20,7 +20,7 @@ export function LcaTargetsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const onBack = () => { router.back(); };
+
   const years = useMemo(() => {
     const y = new Date().getFullYear();
     return [y, y + 1, y + 2];
@@ -86,6 +86,12 @@ export function LcaTargetsPage() {
     setRows((prev) => prev.filter((_, i) => i !== idx));
   };
 
+
+  const handleBack = async () => {
+    await logUsageEvent("EBOM", "EBOM Table Open", {"note": "EBOM Table page opened after viewig the LCA target data"});
+    router.back();
+  };
+
   const save = async () => {
     setSaving(true);
     setError(null);
@@ -107,7 +113,9 @@ export function LcaTargetsPage() {
 
     if (error) setError(error.message);
     setSaving(false);
+    await logUsageEvent("LCA TARGET", "Setting a LCA Target (Carbon Emission target)", { note: "Setting the LCA target in the screen" });
   };
+
 
   if (loading) return <div className="p-6">불러오는 중…</div>;
 
@@ -121,7 +129,7 @@ export function LcaTargetsPage() {
             {saving ? '저장 중…' : '저장'}
           </button>
           <span style={{ margin: "0 8px" }}>|</span>  {/* 구분자 */}
-          <button onClick={onBack} style={btnGhost}>이전단계</button>
+          <button onClick={handleBack} style={btnGhost}>이전단계</button>
         </div>
       </div>
 
