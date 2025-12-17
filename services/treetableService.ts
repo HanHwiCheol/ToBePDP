@@ -12,7 +12,7 @@ const TBL = {
 export async function fetchMaterials(): Promise<Material[]> {
   const { data, error } = await supabase
     .from("materials")
-    .select("code,label,category,weight,emission_factor");  // ← 추가
+    .select("code, label, category, weight, emission_factor, aliases")
   if (error) throw error;
   return (data ?? []) as Material[];
 }

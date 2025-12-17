@@ -81,7 +81,7 @@ export function useTreetable(treetableId?: string, p0?: { ready: boolean; }) {
           _level: (n.line_no?.split(".").length ?? 1) - 1,
         }))
       );
-      alert("저장 완료!");
+      
     } catch (e: any) {
       alert("저장 중 오류 : " + (e?.message ?? "unknown"));
     } finally {

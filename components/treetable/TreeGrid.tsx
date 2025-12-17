@@ -47,20 +47,37 @@ export function TreeGrid({
     const ef = getEf(r.material ?? "");
     return mass * ef;
   });
-  const maxCarbon = carbonByIndex.length ? Math.max(...carbonByIndex) : 0;
+
+  // 🔥 탄소배출 Top3 값 구하기
+  const sorted = [...carbonByIndex]
+    .filter((v) => v > 0)          // 0 이상만
+    .sort((a, b) => b - a);        // 내림차순 정렬
+
+  const top1 = sorted[0] ?? 0;     // 1등
+  const top2 = sorted[1] ?? 0;     // 2등
+  const top3 = sorted[2] ?? 0;     // 3등
+
+  // 각 등수별 배경색 반환
+  const getRowBackground = (value: number): string | undefined => {
+    if (value <= 0) return undefined;
+    if (value === top1) return "#f97373"; // 1등: 진한 빨강
+    if (value === top2) return "#fb923c"; // 2등: 주황
+    if (value === top3) return "#facc15"; // 3등: 노랑
+    return undefined;
+  };
 
   return (
     <div style={wrap}>
       <table style={table}>
         {/* ✅ 고정 컬럼폭 지정 */}
         <colgroup>
-          <col style={{ width: 100 }} /> {/* 라인번호 */}
+          <col style={{ width: 80 }} /> {/* 라인번호 */}
           <col style={{ width: 140 }} /> {/* 품번 */}
-          <col style={{ width: 80 }} />  {/* 리비전 */}
+          <col style={{ width: 40 }} />  {/* 리비전 */}
           <col style={{ width: 150 }} /> {/* 이름 */}
           <col style={{ width: 140 }} /> {/* 생성일 */}
           <col style={{ width: 140 }} /> {/* 수정일 */}
-          <col style={{ width: 100 }} /> {/* 재질 */}
+          <col style={{ width: 70 }} /> {/* 재질 */}
           <col style={{ width: 40 }} /> {/* 수량 */}
           <col style={{ width: 40 }} />  {/* 단위 */}
           <col style={{ width: 80 }} /> {/* 질량(kg) */}
@@ -68,17 +85,17 @@ export function TreeGrid({
         </colgroup>
         <thead style={thead}>
           <tr>
-            <th>라인번호</th>
-            <th>품번</th>
-            <th>리비전</th>
-            <th>이름</th>
-            <th>생성일</th>
-            <th>수정일</th>
-            <th>재질</th>
-            <th>수량</th>
-            <th>단위</th>
-            <th>질량(kg)</th>
-            <th>탄소(kgCO₂e)</th>
+            <th>No</th>
+            <th>P/N</th>
+            <th>Rev</th>
+            <th>Name</th>
+            <th>Create Date</th>
+            <th>Modify Date</th>
+            <th>Material</th>
+            <th>QTY</th>
+            <th>Unit</th>
+            <th>Total Mass(kg)</th>
+            <th>Total Carbon(kgCO₂e)</th>
           </tr>
         </thead>
         <tbody>
@@ -94,8 +111,8 @@ export function TreeGrid({
                 key={r._tmpId ?? r.id ?? idx}
                 style={{
                   ...rowStyle,
-                  ...(carbonByIndex[idx] === maxCarbon && maxCarbon > 0
-                    ? { background: "#f17a7aff" } // 연한 주황 경고 배경
+                  ...(getRowBackground(carbonByIndex[idx])
+                    ? { background: getRowBackground(carbonByIndex[idx])! }
                     : {}),
                 }}
               >

@@ -9,7 +9,9 @@ import { TreeGrid } from "@/components/treetable/TreeGrid";
 import { rowsFromXlsx } from "@/utils/xlsx";
 import { NodeRow } from "@/types/treetable";
 import { supabase } from "@/lib/supabaseClient";
-import { logUsageEvent } from "@/utils/logUsageEvent";  
+import { logUsageEvent } from "@/utils/logUsageEvent";
+import { saveAllNodes } from "@/services/treetableService";
+import { useScenarioStore } from "@/hooks/useScenarioStore";
 import LCAInlinePanel from "@/components/treetable/LCAInlinePanel";
 
 export default function TreetableDetail() {
@@ -27,6 +29,9 @@ export default function TreetableDetail() {
   const { id } = router.query;
   const treetable_id = Array.isArray(id) ? id[0] : id;
 
+  // 시나리오 이름을 가져오지만, treetable에서는 자동 import를 하지 않음
+  const scenario = useScenarioStore((s) => s.scenario);
+
   const {
     materials,            // ✅ 훅에서 받아온다
     rows, setRows,
@@ -43,7 +48,14 @@ export default function TreetableDetail() {
 
     if (importMode === "replace") setRows(imported);
     else setRows((prev) => [...prev, ...imported]);
-    await logUsageEvent("EBOM", "EBOM Table data Import", { note: "EBOM Table data import by user" });
+
+        // DB 저장
+    await saveAllNodes(treetable_id, imported, importMode);
+
+    // 4) treetable 페이지 진입
+    router.reload();
+
+    await logUsageEvent(scenario ?? "unknown", "EBOM Table data Import", { note: "EBOM Table data import by user" });
   };
 
   if (!treetable_id) return null;
@@ -86,7 +98,7 @@ export default function TreetableDetail() {
           background: "#fff",
         }}
       >
-        <LCAInlinePanel treetableId={treetable_id as string} />
+        <LCAInlinePanel rows={rows as NodeRow[]} materials={materials} />
       </div>
 
       {/* 하단 테이블 */}
